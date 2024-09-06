@@ -5,15 +5,15 @@ import os
 
 
 user_directory = os.path.expanduser("~")
-simple_note_dir = os.path.join(user_directory, ".DraftBook")
+draft_book_dir = os.path.join(user_directory, ".DraftBook")
 
 
-if not os.path.exists(simple_note_dir):
-    os.makedirs(simple_note_dir)
+if not os.path.exists(draft_book_dir):
+    os.makedirs(draft_book_dir)
 
 
-note_file_path = os.path.join(simple_note_dir, "notiz.txt")
-key_file_path = os.path.join(simple_note_dir, "secret.key")
+note_file_path = os.path.join(draft_book_dir, "notiz.txt")
+key_file_path = os.path.join(draft_book_dir, "secret.key")
 
 if __name__ == "__main__":
     root = tk.Tk()
