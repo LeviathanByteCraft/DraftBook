@@ -2,15 +2,16 @@ import tkinter as tk
 from gui import GUI
 from encryption import EncryptionManager
 import os
-
+import subprocess
 
 user_directory = os.path.expanduser("~")
-draft_book_dir = os.path.join(user_directory, ".DraftBook")
+draft_book_dir = os.path.join(user_directory, "DraftBook")
 
 
 if not os.path.exists(draft_book_dir):
     os.makedirs(draft_book_dir)
-
+    
+    subprocess.run(["attrib", "+h", draft_book_dir], check=True)
 
 note_file_path = os.path.join(draft_book_dir, "notiz.txt")
 key_file_path = os.path.join(draft_book_dir, "secret.key")
