@@ -9,15 +9,24 @@ class GUI:
         self.encryption_manager = encryption_manager
         self.file_path = file_path
 
-        self.root.title("DraftBook")
         screen_width = root.winfo_screenwidth()
-        self.root.geometry(f'600x50+{screen_width-600}+0')
+        window_width = 600
+        window_height = 50
+        x_position = screen_width // 2 + 200
+        y_position = 0  
+
+        self.root.geometry(f'{window_width}x{window_height}+{x_position}+{y_position}')
         self.root.overrideredirect(True)
         self.root.configure(bg='#607D8B')
         self.font = ("Arial", 16)
 
         self.offset_x = 0
         self.offset_y = 0
+        self.is_expanded = False
+        self.is_fixed = False
+        self.original_height = 50
+        self.expanded_height = 400
+
         self.root.bind('<Button-1>', self.click_window)
         self.root.bind('<B1-Motion>', self.drag_window)
 
@@ -25,11 +34,17 @@ class GUI:
         self.time_label.pack(side=tk.LEFT, padx=20)
         self.root.after(1000, self.update_clock)
 
-        close_button = tk.Button(self.root, text="✖", command=self.close_app, bg='#607D8B', fg='#000000', borderwidth=0, font=self.font, highlightthickness=0)
-        close_button.pack(side=tk.RIGHT, padx=20)
+        button_frame = tk.Frame(self.root, bg='#607D8B')
+        button_frame.pack(side=tk.RIGHT, padx=10)
 
-        self.expand_button = tk.Button(self.root, text="⮟", command=self.toggle_expand, bg='#607D8B', fg='#000000', borderwidth=0, font=self.font, highlightthickness=0)
-        self.expand_button.pack(side=tk.RIGHT, padx=10)
+        self.fix_button = tk.Button(button_frame, text="📌", command=self.toggle_fix, bg='#607D8B', fg='#000000', borderwidth=0, font=self.font, highlightthickness=0)
+        self.fix_button.pack(side=tk.LEFT, padx=5)
+
+        close_button = tk.Button(button_frame, text="✖", command=self.close_app, bg='#607D8B', fg='#000000', borderwidth=0, font=self.font, highlightthickness=0)
+        close_button.pack(side=tk.LEFT, padx=5)
+
+        self.expand_button = tk.Button(button_frame, text="⮟", command=self.toggle_expand, bg='#607D8B', fg='#000000', borderwidth=0, font=self.font, highlightthickness=0)
+        self.expand_button.pack(side=tk.LEFT, padx=5)
 
         self.text_field = tk.Text(self.root, font=("Arial", 14), wrap=tk.WORD, bg='#EAE0C8')
         self.text_field.pack_forget()
@@ -37,13 +52,15 @@ class GUI:
         self.load_notes()
 
     def click_window(self, event):
-        self.offset_x = event.x
-        self.offset_y = event.y
+        if not self.is_fixed:
+            self.offset_x = event.x
+            self.offset_y = event.y
 
     def drag_window(self, event):
-        x = self.root.winfo_pointerx() - self.offset_x
-        y = self.root.winfo_pointery() - self.offset_y
-        self.root.geometry(f'+{x}+{y}')
+        if not self.is_fixed:
+            x = self.root.winfo_pointerx() - self.offset_x
+            y = self.root.winfo_pointery() - self.offset_y
+            self.root.geometry(f'+{x}+{y}')
 
     def update_clock(self):
         now = time.strftime("%H:%M:%S")
@@ -55,16 +72,29 @@ class GUI:
         self.root.destroy()
 
     def toggle_expand(self):
-        if self.text_field.winfo_ismapped():
+        current_x = self.root.winfo_x()
+        current_y = self.root.winfo_y()
+
+        if self.is_expanded:
             self.text_field.pack_forget()
-            self.root.geometry(f'600x50+{self.root.winfo_x()}+0')
+            self.root.geometry(f'600x{self.original_height}+{current_x}+{current_y}')
             self.time_label.pack(side=tk.LEFT, padx=20)
             self.expand_button.config(text="⮟")
         else:
             self.time_label.pack_forget()
-            self.root.geometry(f'600x400+{self.root.winfo_x()}+0')
+            self.root.geometry(f'600x{self.expanded_height}+{current_x}+{current_y}')
             self.text_field.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
             self.expand_button.config(text="⮝")
+
+        self.is_expanded = not self.is_expanded
+
+    def toggle_fix(self):
+        self.is_fixed = not self.is_fixed
+        
+        if self.is_fixed:
+            self.fix_button.config(text="🔒")  
+        else:
+            self.fix_button.config(text="📌")  
 
     def save_notes(self):
         try:
@@ -75,7 +105,6 @@ class GUI:
         except Exception as e:
             messagebox.showerror("Error", f"Error while saving: {e}")
 
-
     def load_notes(self):
         if os.path.exists(self.file_path): 
             try:
@@ -85,4 +114,3 @@ class GUI:
                     self.text_field.insert(tk.END, decrypted_text)
             except Exception as e:
                 messagebox.showerror("Error", f"The saved notes could not be loaded: {e}")
-
